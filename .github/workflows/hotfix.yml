@@ -15,3 +15,5 @@ jobs:
           git log --stat
           git status
           env
+          git config -l
+          git --version
