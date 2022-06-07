@@ -11,9 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - run: |
-          git log --stat
-          git status
-          env
-          git config -l
-          git --version
+          git fetch origin release
+          git checkout release
+          git cherry-pick $GITHUB_SHA
+          git push
