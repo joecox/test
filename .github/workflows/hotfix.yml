@@ -14,7 +14,8 @@ jobs:
         with:
           fetch-depth: 0
       - run: |
-          env
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
           git fetch origin release
           git checkout release
           git cherry-pick $GITHUB_SHA
