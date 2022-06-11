@@ -55,4 +55,4 @@ jobs:
             It looks like your PR contains a potentially dangerous Django migration.
             
             Please be thoughtful about releasing your changes in a safe manner. See [Safe Django Migrations]() for more information and instructions.
-        run: gh pr comment $PR --body $COMMENT
+        run: gh pr comment $PR --body "$COMMENT"
