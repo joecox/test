@@ -19,14 +19,15 @@ jobs:
         run: |
           shopt -s globstar
           DIFF=$(git diff $BASE $GITHUB_SHA **/migrations/**)
-          echo "::set-output name=diff::value=$DIFF"
+          echo "::echo::on"
+          echo "::set-output name=foobar::value=$DIFF"
       - run: echo "$DIFF"
         env:
-          DIFF: ${{ steps.diff.outputs.diff }}
+          DIFF: ${{ steps.diff.outputs.foobar }}
       - uses: actions-ecosystem/action-regex-match@v2
         id: regex-match
         with:
-          text: ${{ steps.diff.outputs.diff }}
+          text: ${{ steps.diff.outputs.foobar }}
           regex: 'migrations\.(DeleteModel|RenameModel|RemoveField|RenameField)'
       - if: ${{ steps.regex-match.outputs.match != '' }}
         env:
