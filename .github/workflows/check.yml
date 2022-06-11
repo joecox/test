@@ -11,9 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - id: diff
         run: |
-          git fetch origin main ${{ github.event.pull_request.base.sha }}
           DIFF=$(git diff ${{ github.event.pull_request.base.sha }} ${{ github.sha }} **/migrations/**)
           echo "::set-output name=diff::value=$DIFF"
       - run: echo "$DIFF"
