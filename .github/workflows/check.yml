@@ -11,9 +11,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - id: diff
+        run: |
+          git fetch origin develop ${{ github.event.pull_request.base.sha }}
+          DIFF=$(git diff ${{ github.event.pull_request.base.sha }} ${{ github.sha }} **/migrations/**)
+          echo "::set-output name=diff::value=$DIFF"
+      - run: echo "$DIFF"
+        env:
+          DIFF: ${{ steps.diff.output.diff }}
+      - uses: actions-ecosystem/action-regex-match@v2
+        id: regex-match
         with:
-          fetch-depth: 0
-      - run: |
-          git status
-          git log --stat
-          env
+          text: ${{ steps.diff.output.diff }}
+          regex: 'migrations\.(DeleteModel|RenameModel|RemoveField|RenameField)'
+      - if: ${{ steps.regex-match.outputs.match != '' }}
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: gh pr comment $PR_NUMBER --body "Test comment"
