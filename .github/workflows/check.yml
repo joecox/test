@@ -47,9 +47,17 @@ jobs:
             echo "::set-output name=dangerous::yes"
             
       - env:
-          TEST: ${{ github.event }}
-          TEST_PR: ${{ github.event.pull_request }}
+          TEST: ${{ toJson(github.event) }}
+          TEST_PR: ${{ toJson(github.event.pull_request) }}
         run: echo "$TEST"; echo "$TEST_PR"
+        
+      - id: find-comment
+        uses: peter-evans/find-comment@v2
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body-includes: "<!-- Check Migration Workflow Magic String -->"
+          
+      - run: echo "${{ github.find-comment.outputs.comment-id }}"
 
       # If the output flag was set from the last step, post a comment on the PR.
       - if: steps.check-migrations.outputs.dangerous == 'yes'
@@ -57,6 +65,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
           COMMENT: |
+            <!-- Check Migration Workflow Magic String -->
             It looks like your PR contains a potentially dangerous Django migration.
             
             Please be thoughtful about releasing your changes in a safe manner. See [Safe Django Migrations]() for more information and instructions.
