@@ -18,17 +18,11 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha }}
         run: |
           shopt -s globstar
-          git log --stat
-          git diff $BASE $GITHUB_SHA
-          echo "------"
-          git diff $BASE $GITHUB_SHA **/migrations/**
           DIFF=$(git diff $BASE $GITHUB_SHA **/migrations/**)
           echo "::set-output name=diff::value=$DIFF"
-          echo "::set-output name=diff_direct::value=$(git diff $BASE $GITHUB_SHA **/migrations/**)"
-      - run: echo "$DIFF"; echo "$DIFF_DIRECT"
+      - run: echo "$DIFF"
         env:
           DIFF: ${{ steps.diff.output.diff }}
-          DIFF_DIRECT: ${{ steps.diff.output.diff_direct }}
       - uses: actions-ecosystem/action-regex-match@v2
         id: regex-match
         with:
