@@ -1,38 +1,45 @@
 name: Check
 on:
   pull_request:
+    # The opened type triggers when a PR is opened.
+    # The synchronize type triggers when the PR HEAD is updated (e.g. a new commit is pushed to the branch)
+    # https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#pull_request
     types:
       - opened
       - synchronize
+    # Triggers only when the target (base) branch is main.
+    # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-including-branches
     branches:
       - main
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
+      # Checks out the repo contents.
+      # The fetch-depth: 0 option fetches the entire history. This is necessary to get the PR diff.
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      # Gets the PR diff and checks if the PR contains certain Django migrations.
+      #
+      # The regex comparison is done within the same step, as opposed to a separate step,
+      # because passing multiline strings between steps is difficult, see
+      # https://github.community/t/set-output-truncates-multiline-strings/16852
+      #
+      # Possible improvements:
+      # * Filter the diff to only migration files, like
+      #   `shopt -s globstar && git diff $BASE $GITHUB_SHA **/migrations/**.py`
+      # * Filter the diff to only added lines
       - id: check-migrations
         env:
           BASE: ${{ github.event.pull_request.base.sha }}
         run: |
-          # shopt -s globstar
-          # DIFF=$(git diff $BASE $GITHUB_SHA **/migrations/**)
           DIFF=$(git diff $BASE $GITHUB_SHA)
-          echo "$DIFF"
-          echo "::echo::on"
           [[ $DIFF =~ "migrations\.(DeleteModel|RenameModel|RemoveField|RenameField)" ]] && \
-            echo "::set-output name=dangerous_fields::added"
-#       - run: echo "$DIFF"
-#         env:
-#           DIFF: ${{ steps.diff.outputs.foobar }}
-#       - uses: actions-ecosystem/action-regex-match@v2
-#         id: regex-match
-#         with:
-#           text: ${{ steps.diff.outputs.foobar }}
-#           regex: 'migrations\.(DeleteModel|RenameModel|RemoveField|RenameField)'
-      - if: ${{ steps.check-migrations.outputs.dangerous_fields == 'added' }}
+            echo "::set-output name=dangerous_fields::yes"
+      # If the output flag was set from the last step, post a comment on the PR.
+      - if: ${{ steps.check-migrations.outputs.dangerous_fields == 'yes' }}
         env:
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: gh pr comment $PR_NUMBER --body "Test comment"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+        run: gh pr comment $PR --body "Test comment"
