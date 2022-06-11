@@ -45,11 +45,16 @@ jobs:
           DIFF=$(git diff $BASE $GITHUB_SHA)
           [[ $DIFF =~ "migrations\.(DeleteModel|RenameModel|RemoveField|RenameField)" ]] && \
             echo "::set-output name=dangerous::yes"
+            
+      - env:
+          TEST: ${{ github.event }}
+          TEST_PR: ${{ github.event.pull_request }}
+        run: echo "$TEST"; echo "$TEST_PR"
 
       # If the output flag was set from the last step, post a comment on the PR.
       - if: steps.check-migrations.outputs.dangerous == 'yes'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
           COMMENT: |
             It looks like your PR contains a potentially dangerous Django migration.
