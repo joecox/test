@@ -14,6 +14,8 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    env:
+      MAGIC_COMMENT_STRING: "<!-- Check Migration Workflow Magic String -->"
     steps:
       # Checks out the repo contents.
       # The fetch-depth: 0 option fetches the entire history. This is necessary to get the PR diff.
@@ -45,28 +47,31 @@ jobs:
           DIFF=$(git diff $BASE $GITHUB_SHA)
           [[ $DIFF =~ "migrations\.(DeleteModel|RenameModel|RemoveField|RenameField)" ]] && \
             echo "::set-output name=dangerous::yes"
-            
-      - env:
-          TEST: ${{ toJson(github.event) }}
-          TEST_PR: ${{ toJson(github.event.pull_request) }}
-        run: echo "$TEST"; echo "$TEST_PR"
-        
-      - id: find-comment
-        uses: peter-evans/find-comment@v2
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body-includes: "<!-- Check Migration Workflow Magic String -->"
-          
-      - run: echo "${{ github.find-comment.outputs.comment-id }}"
 
-      # If the output flag was set from the last step, post a comment on the PR.
+#       - id: find-comment
+#         uses: peter-evans/find-comment@v2
+#         with:
+#           issue-number: ${{ github.event.number }}
+#           body-includes: ${{ env.MAGIC_COMMENT_STRING }}
+
+      # Add a PR comment if it contains dangerous migrations and doesn't yet have such a comment.
       - if: steps.check-migrations.outputs.dangerous == 'yes'
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          PR: ${{ github.event.pull_request.number }}
-          COMMENT: |
-            <!-- Check Migration Workflow Magic String -->
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: Dangerous Migrations Comment
+          message: |
             It looks like your PR contains a potentially dangerous Django migration.
             
             Please be thoughtful about releasing your changes in a safe manner. See [Safe Django Migrations]() for more information and instructions.
-        run: gh pr comment $PR --body "$COMMENT"
+          
+#       # Add a PR comment if it contains dangerous migrations and doesn't yet have such a comment.
+#       - if: steps.check-migrations.outputs.dangerous == 'yes' && steps.find-comment.outputs.comment-id == 0
+#         env:
+#           GITHUB_TOKEN: ${{ github.token }}
+#           PR: ${{ github.event.number }}
+#           COMMENT: |
+#             $MAGIC_COMMENT_STRING
+#             It looks like your PR contains a potentially dangerous Django migration.
+            
+#             Please be thoughtful about releasing your changes in a safe manner. See [Safe Django Migrations]() for more information and instructions.
+#         run: gh pr comment $PR --body "$COMMENT"
