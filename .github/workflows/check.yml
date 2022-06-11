@@ -22,11 +22,11 @@ jobs:
           echo "::set-output name=diff::value=$DIFF"
       - run: echo "$DIFF"
         env:
-          DIFF: ${{ steps.diff.output.diff }}
+          DIFF: ${{ steps.diff.outputs.diff }}
       - uses: actions-ecosystem/action-regex-match@v2
         id: regex-match
         with:
-          text: ${{ steps.diff.output.diff }}
+          text: ${{ steps.diff.outputs.diff }}
           regex: 'migrations\.(DeleteModel|RenameModel|RemoveField|RenameField)'
       - if: ${{ steps.regex-match.outputs.match != '' }}
         env:
