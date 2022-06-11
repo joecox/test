@@ -48,12 +48,6 @@ jobs:
           [[ $DIFF =~ "migrations\.(DeleteModel|RenameModel|RemoveField|RenameField)" ]] && \
             echo "::set-output name=dangerous::yes"
 
-#       - id: find-comment
-#         uses: peter-evans/find-comment@v2
-#         with:
-#           issue-number: ${{ github.event.number }}
-#           body-includes: ${{ env.MAGIC_COMMENT_STRING }}
-
       # Add a PR comment if it contains dangerous migrations and doesn't yet have such a comment.
       - if: steps.check-migrations.outputs.dangerous == 'yes'
         uses: marocchino/sticky-pull-request-comment@v2
@@ -63,15 +57,3 @@ jobs:
             It looks like your PR contains a potentially dangerous Django migration.
             
             Please be thoughtful about releasing your changes in a safe manner. See [Safe Django Migrations]() for more information and instructions.
-          
-#       # Add a PR comment if it contains dangerous migrations and doesn't yet have such a comment.
-#       - if: steps.check-migrations.outputs.dangerous == 'yes' && steps.find-comment.outputs.comment-id == 0
-#         env:
-#           GITHUB_TOKEN: ${{ github.token }}
-#           PR: ${{ github.event.number }}
-#           COMMENT: |
-#             $MAGIC_COMMENT_STRING
-#             It looks like your PR contains a potentially dangerous Django migration.
-            
-#             Please be thoughtful about releasing your changes in a safe manner. See [Safe Django Migrations]() for more information and instructions.
-#         run: gh pr comment $PR --body "$COMMENT"
