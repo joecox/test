@@ -23,7 +23,7 @@ jobs:
           echo "$DIFF"
           echo "::echo::on"
           [[ $DIFF =~ "migrations\.(DeleteModel|RenameModel|RemoveField|RenameField)" ]] && \
-            echo "::set-output name=dangerous-fields::value=added"
+            echo "::set-output name=dangerous_fields::added"
 #       - run: echo "$DIFF"
 #         env:
 #           DIFF: ${{ steps.diff.outputs.foobar }}
@@ -32,7 +32,7 @@ jobs:
 #         with:
 #           text: ${{ steps.diff.outputs.foobar }}
 #           regex: 'migrations\.(DeleteModel|RenameModel|RemoveField|RenameField)'
-      - if: ${{ steps.check-migrations.outputs.dangerous-fields == 'added' }}
+      - if: ${{ steps.check-migrations.outputs.dangerous_fields == 'added' }}
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: gh pr comment $PR_NUMBER --body "Test comment"
