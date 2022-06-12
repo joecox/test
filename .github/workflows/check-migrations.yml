@@ -1,0 +1,49 @@
+name: Check Migrations
+on:
+  pull_request:
+    # The opened type triggers when a PR is opened.
+    # The synchronize type triggers when the PR HEAD is updated (e.g. a new commit is pushed to the branch)
+    # https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#pull_request
+    types:
+      - opened
+      - synchronize
+    # Triggers only when the target (base) branch is main.
+    # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-including-branches
+    branches:
+      - main
+env:
+  MIGRATION_REGEX: "migrations\\.(DeleteModel|RenameModel|RemoveField|RenameField)"
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      # Gets the PR diff and checks if the PR contains certain Django migrations.
+      #
+      # The regex comparison is done within the same step, as opposed to a separate step,
+      # because passing multiline strings between steps is difficult, see
+      # https://github.community/t/set-output-truncates-multiline-strings/16852
+      # and I could not find a suitable existing "git diff" action.
+      #
+      # Possible improvements:
+      # * Filter the diff to only migration files
+      # * Look for migrations only in added lines
+      - id: check-migrations
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.number }}
+        run: |
+          DIFF=$(gh pr diff $PR)
+          [[ $DIFF =~ $MIGRATION_REGEX ]] && \
+            echo "::set-output name=dangerous::yes"
+
+      # Add a PR comment if it contains dangerous migrations and doesn't yet have such a comment.
+      - if: steps.check-migrations.outputs.dangerous == 'yes'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: Dangerous Migrations Comment
+          message: |
+            It looks like your PR contains a potentially dangerous Django migration.
+            
+            Please be thoughtful about releasing your changes in a safe manner. See [Safe Django Migrations]() for more information and instructions.
