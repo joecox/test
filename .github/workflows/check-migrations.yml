@@ -1,4 +1,4 @@
-name: Check
+name: Check Migrations
 on:
   pull_request:
     # The opened type triggers when a PR is opened.
