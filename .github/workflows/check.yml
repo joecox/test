@@ -20,12 +20,14 @@ jobs:
       # The regex comparison is done within the same step, as opposed to a separate step,
       # because passing multiline strings between steps is difficult, see
       # https://github.community/t/set-output-truncates-multiline-strings/16852
+      # and I could not find a suitable existing "git diff" action.
       #
       # Possible improvements:
       # * Filter the diff to only migration files
       # * Look for migrations only in added lines
       - id: check-migrations
         env:
+          GITHUB_TOKEN: ${{ github.token }}
           PR: ${{ github.event.number }}
         run: |
           DIFF=$(gh pr diff $PR)
