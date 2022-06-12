@@ -11,6 +11,8 @@ on:
     # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-including-branches
     branches:
       - main
+env:
+  MIGRATION_REGEX: "migrations\\.(DeleteModel|RenameModel|RemoveField|RenameField)"
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -33,7 +35,7 @@ jobs:
           PR: ${{ github.event.number }}
         run: |
           DIFF=$(gh pr diff $PR)
-          [[ $DIFF =~ "migrations\.(DeleteModel|RenameModel|RemoveField|RenameField)" ]] && \
+          [[ $DIFF =~ "${{ env.MIGRATION_REGEX }}" ]] && \
             echo "::set-output name=dangerous::yes"
 
       # Add a PR comment if it contains dangerous migrations and doesn't yet have such a comment.
