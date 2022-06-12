@@ -15,6 +15,8 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
+
       # Gets the PR diff and checks if the PR contains certain Django migrations.
       #
       # The regex comparison is done within the same step, as opposed to a separate step,
