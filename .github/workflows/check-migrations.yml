@@ -17,6 +17,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
+      - run: echo "${{ toJson(github) }}"
       - uses: actions/checkout@v3
 
       # Gets the PR diff and checks if the PR contains certain Django migrations.
