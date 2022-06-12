@@ -14,15 +14,7 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
-    env:
-      MAGIC_COMMENT_STRING: "<!-- Check Migration Workflow Magic String -->"
     steps:
-      # Checks out the repo contents.
-      # The fetch-depth: 0 option fetches the entire history. This is necessary to get the PR diff.
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
       # Gets the PR diff and checks if the PR contains certain Django migrations.
       #
       # The regex comparison is done within the same step, as opposed to a separate step,
@@ -30,21 +22,13 @@ jobs:
       # https://github.community/t/set-output-truncates-multiline-strings/16852
       #
       # Possible improvements:
-      # * Filter the diff to only migration files, like
-      #   `shopt -s globstar && git diff $BASE $GITHUB_SHA **/migrations/**.py`
+      # * Filter the diff to only migration files
       # * Look for migrations only in added lines
-      #
-      # GITHUB_SHA is a default env var, also available via github.sha
-      # https://docs.github.com/en/actions/learn-github-actions/environment-variables#default-environment-variables
-      #
-      # github.event.pull_request.base.sha is the SHA of the target (base) branch.
-      # The `github` context: https://docs.github.com/en/actions/learn-github-actions/contexts#github-context
-      # The `pull_request` event: https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#pull_request
       - id: check-migrations
         env:
-          BASE: ${{ github.event.pull_request.base.sha }}
+          PR: ${{ github.event.number }}
         run: |
-          DIFF=$(git diff $BASE $GITHUB_SHA)
+          DIFF=$(gh pr diff $PR)
           [[ $DIFF =~ "migrations\.(DeleteModel|RenameModel|RemoveField|RenameField)" ]] && \
             echo "::set-output name=dangerous::yes"
 
