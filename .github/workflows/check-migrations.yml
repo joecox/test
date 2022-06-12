@@ -35,7 +35,7 @@ jobs:
           PR: ${{ github.event.number }}
         run: |
           DIFF=$(gh pr diff $PR)
-          [[ $DIFF =~ "${{ env.MIGRATION_REGEX }}" ]] && \
+          [[ $DIFF =~ $MIGRATION_REGEX ]] && \
             echo "::set-output name=dangerous::yes"
 
       # Add a PR comment if it contains dangerous migrations and doesn't yet have such a comment.
